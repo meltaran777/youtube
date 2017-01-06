@@ -59,7 +59,7 @@ public class Utils {
 
     public static final Integer ARG_TIMEOUT_MS  = 4000;
 
-    public static final String TAG_FANDROID = "Fandroid:";
+    public static final String TAG_DEBUG = "Debug:";
 
     public static final String TAG_CHANNEL_ID  = "channel_id";
     public static final String TAG_VIDEO_TYPE  = "video_type";

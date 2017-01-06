@@ -1,6 +1,8 @@
 package com.bohdan.youtube.adapter;
 
 import android.animation.Animator;
+import android.content.Context;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.bohdan.youtube.R;
+import com.bohdan.youtube.util.MySingleton;
 import com.bohdan.youtube.util.Utils;
 import com.marshalchen.ultimaterecyclerview.UltimateRecyclerviewViewHolder;
 import com.marshalchen.ultimaterecyclerview.UltimateViewAdapter;
@@ -32,9 +35,9 @@ public class AdapterList extends UltimateViewAdapter<RecyclerView.ViewHolder> {
     private final int ANIMATION_DURATION = 300;
 
 
-    public AdapterList(ArrayList<HashMap<String, String>> DATA, ImageLoader imageLoader) {
-        this.DATA = DATA;
-        this.imageLoader = imageLoader;
+    public AdapterList(Context context, ArrayList<HashMap<String, String>> list) {
+        DATA = list;
+        imageLoader = MySingleton.getInstance(context).getImageLoader();
     }
 
     @Override
