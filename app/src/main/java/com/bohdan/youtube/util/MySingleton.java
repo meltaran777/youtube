@@ -30,12 +30,12 @@ public class MySingleton {
 
          @Override
          public Bitmap getBitmap(String url) {
-             return null;
+             return cache.get(url);
          }
 
          @Override
          public void putBitmap(String url, Bitmap bitmap) {
-
+             cache.put(url, bitmap);
          }
      });
     }

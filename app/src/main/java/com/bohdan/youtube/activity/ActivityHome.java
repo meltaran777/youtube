@@ -272,8 +272,7 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
 
     @Override
     public void onVideoSelected(String ID) {
-        FragmentVideo fragmentVideo =
-                (FragmentVideo) getFragmentManager().findFragmentById(R.id.video_fragment_container);
+        FragmentVideo fragmentVideo = (FragmentVideo) getFragmentManager().findFragmentById(R.id.video_fragment_container);
         fragmentVideo.setVideoId(ID);
     }
 

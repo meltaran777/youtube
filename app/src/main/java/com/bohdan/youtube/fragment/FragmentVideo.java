@@ -1,5 +1,8 @@
 package com.bohdan.youtube.fragment;
 
+import android.os.Bundle;
+
+import com.bohdan.youtube.R;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerFragment;
@@ -12,6 +15,13 @@ public class FragmentVideo extends YouTubePlayerFragment implements YouTubePlaye
 
     private YouTubePlayer player;
     private String videoId;
+
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+
+        initialize(getResources().getString(R.string.youtube_apikey), this);
+    }
 
     @Override
     public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
@@ -40,7 +50,7 @@ public class FragmentVideo extends YouTubePlayerFragment implements YouTubePlaye
     public void setVideoId(String videoId) {
         if (videoId != null && !videoId.equals(this.videoId)){
             this.videoId = videoId;
-            if (player == null){
+            if (player != null){
                 player.cueVideo(videoId);
             }
         }
