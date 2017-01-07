@@ -82,7 +82,7 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
 
         AccountHeader accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
-                .withHeaderBackground(R.mipmap.ic_launcher)
+                .withHeaderBackground(R.drawable.header)
                 .build();
 
         drawer = new DrawerBuilder(this)
