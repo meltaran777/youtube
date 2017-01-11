@@ -1,6 +1,7 @@
 package com.bohdan.youtube.fragment;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -23,6 +24,10 @@ import com.bohdan.youtube.R;
 import com.bohdan.youtube.adapter.AdapterList;
 import com.bohdan.youtube.util.MySingleton;
 import com.bohdan.youtube.util.Utils;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.lsjwzh.widget.materialloadingprogressbar.CircleProgressBar;
 import com.marshalchen.ultimaterecyclerview.ItemTouchListenerAdapter;
 import com.marshalchen.ultimaterecyclerview.UltimateRecyclerView;
@@ -41,12 +46,15 @@ public class FragmentChannelVideo extends Fragment implements View.OnClickListen
 
     private static final String TAG = FragmentChannelVideo.class.getSimpleName();
     private static final String TAGS = "URL";
+    private static final String TEST_DEVICE_ID = "E4EDCC850440524A8FA45C9683DD3265";
 
     private TextView mLblNoResult;
     private LinearLayout mLytRetry;
     private CircleProgressBar mPrgLoading;
     private UltimateRecyclerView mUltimateRecyclerView;
 
+    private AdView adView;
+    private boolean isAdMobVisible;
 
     private int mVideoType;
     private String mChannelId;
@@ -88,6 +96,12 @@ public class FragmentChannelVideo extends Fragment implements View.OnClickListen
         mLytRetry                   = (LinearLayout) view.findViewById(R.id.lytRetry);
         mPrgLoading                 = (CircleProgressBar) view.findViewById(R.id.prgLoading);
         AppCompatButton btnRetry    = (AppCompatButton) view.findViewById(R.id.raisedRetry);
+
+        adView = (AdView) view.findViewById(R.id.adView);
+
+        isAdMobVisible = Utils.admobVisibility(adView, Utils.IS_ADMOB_VISIBLE);
+
+        new SyncShowAd(adView).execute();
 
         btnRetry.setOnClickListener(this);
         mPrgLoading.setColorSchemeResources(R.color.accent_color);
@@ -500,6 +514,88 @@ public class FragmentChannelVideo extends Fragment implements View.OnClickListen
                 break;
             default:
                 break;
+        }
+    }
+
+    public class SyncShowAd extends AsyncTask<Void, Void, Void> {
+
+        AdView ad;
+        AdRequest adRequest, interstitialAdRequest;
+        InterstitialAd interstitialAd;
+        int interstitialTrigger;
+
+        public SyncShowAd(AdView ad) {
+            this.ad = ad;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            if (isAdMobVisible) {
+                if (Utils.IS_ADMOB_IN_DEBUG) {
+                    adRequest = new AdRequest.Builder()
+                            .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                            .addTestDevice(TEST_DEVICE_ID)
+                            .build();
+                } else {
+                    adRequest = new AdRequest.Builder().build();
+                }
+
+                interstitialAd = new InterstitialAd(getActivity());
+                interstitialAd.setAdUnitId(getActivity().getResources().getString(R.string.interstitial_ad_id));
+                interstitialTrigger = Utils.loadIntPreferences(getActivity(), Utils.ARG_ADMOB_PREFERENCE, Utils.ARG_TRIGGER);
+
+                if (interstitialTrigger == Utils.ARG_TRIGGER_VALUE) {
+                    if (Utils.IS_ADMOB_IN_DEBUG){
+                        interstitialAdRequest = new AdRequest.Builder()
+                                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                                .addTestDevice(TEST_DEVICE_ID)
+                                .build();
+                    } else {
+                        interstitialAdRequest = new AdRequest.Builder().build();
+                    }
+                    Utils.saveIntPreferences(getActivity(), Utils.ARG_ADMOB_PREFERENCE, Utils.ARG_TRIGGER, 1);
+                } else {
+                    Utils.saveIntPreferences(getActivity(), Utils.ARG_ADMOB_PREFERENCE, Utils.ARG_TRIGGER,
+                            (interstitialTrigger + 1));
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (isAdMobVisible) {
+                ad.loadAd(adRequest);
+                if (interstitialTrigger == Utils.ARG_TRIGGER_VALUE) {
+                    interstitialAd.loadAd(interstitialAdRequest);
+                    interstitialAd.setAdListener(new AdListener() {
+                        @Override
+                        public void onAdClosed() {
+
+                        }
+
+                        @Override
+                        public void onAdFailedToLoad(int errorCode) {
+
+                        }
+
+                        @Override
+                        public void onAdLoaded() {
+                            if (interstitialAd.isLoaded()) {
+                                interstitialAd.show();
+                            }
+                        }
+                    });
+                }
+            }
         }
     }
 }

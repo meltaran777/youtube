@@ -4,11 +4,13 @@ import com.bohdan.youtube.R;
 import com.bohdan.youtube.fragment.FragmentChannelVideo;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,13 +23,21 @@ import com.bohdan.youtube.util.Utils;
 import com.google.android.youtube.player.YouTubeApiServiceUtil;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
+import com.mikepenz.iconics.typeface.IIcon;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.SectionDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
@@ -36,9 +46,11 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
 
     private static final int LANDSCAPE_VIDEO_PADDING_DP = 5;
     private static final int RECOVERY_DIALOG_REQUEST = 1;
+    private static final int ADDITIONAL_ITEM_NUMBER = 2;
     private FragmentVideo fragmentVideo;
     private boolean isFullscreen;
 
+    private DrawerBuilder drawerBuilder = null;
     private Drawer drawer = null;
     private Toolbar toolbar;
     private View decorView;
@@ -46,6 +58,7 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
     private String[] channelNames;
     private String[] channelId;
     private String[] videoTypes;
+    private String[] videoCategory;
 
     private int selectedDrawerItem = 0;
 
@@ -65,78 +78,168 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
         decorView = getWindow().getDecorView();
         fragmentVideo = (FragmentVideo) getFragmentManager().findFragmentById(R.id.video_fragment_container);
 
-        channelNames = getResources().getStringArray(R.array.channel_names);
-        channelId = getResources().getStringArray(R.array.channel_id);
-        videoTypes = getResources().getStringArray(R.array.video_types);
-
         checkYouTubeApi();
-
-        PrimaryDrawerItem[] primaryDrawerItems = new PrimaryDrawerItem[channelId.length];
-
-        for (int i = 0; i < channelId.length; i++) {
-            primaryDrawerItems[i] = new PrimaryDrawerItem()
-                    .withName(channelNames[i])
-                    .withIdentifier(i)
-                    .withSelectable(false);
-        }
 
         AccountHeader accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header)
                 .build();
 
-        drawer = new DrawerBuilder(this)
+        drawerBuilder = new DrawerBuilder(this)
                 .withActivity(ActivityHome.this)
                 .withAccountHeader(accountHeader)
                 .withDisplayBelowStatusBar(true)
                 .withToolbar(toolbar)
                 .withActionBarDrawerToggleAnimated(true)
                 .withSavedInstance(savedInstanceState)
-                .addDrawerItems(primaryDrawerItems)
                 .addStickyDrawerItems(
                         new SecondaryDrawerItem()
                                 .withName(getString(R.string.about))
-                                .withIdentifier(channelId.length - 1)
+                                .withIdentifier(111)
+                                //.withIdentifier(channelId.length - 1)
                                 .withSelectable(false)
                 )
-                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-                    @Override
-                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-
-                        selectedDrawerItem = position;
-                        if (drawerItem != null) {
-                            if (drawerItem.getIdentifier() >= 0 && selectedDrawerItem != -1) {
-
-                                setToolbarAndSelectedDrawerItem(
-                                        channelNames[selectedDrawerItem-1],
-                                        (selectedDrawerItem-1)
-                                );
-
-                                Bundle bundle = new Bundle();
-                                bundle.putString(Utils.TAG_VIDEO_TYPE,
-                                        videoTypes[selectedDrawerItem-1]);
-                                bundle.putString(Utils.TAG_CHANNEL_ID,
-                                        channelId[selectedDrawerItem-1]);
-
-                                fragment = new FragmentChannelVideo();
-                                fragment.setArguments(bundle);
-
-                                getSupportFragmentManager().beginTransaction()
-                                        .replace(R.id.fragment_container, fragment)
-                                        .commit();
-                            } else if (selectedDrawerItem == -1) {
-                                Intent aboutIntent = new Intent(getApplicationContext(),
-                                        ActivityAbout.class);
-                                startActivity(aboutIntent);
-                                overridePendingTransition(R.anim.open_next, R.anim.close_main);
-                            }
-                        }
-                        return false;
-                    }
-                })
                 .withSavedInstance(savedInstanceState)
-                .withShowDrawerOnFirstLaunch(true)
-                .build();
+                .withShowDrawerOnFirstLaunch(true);
+
+        videoCategory = getResources().getStringArray(R.array.video_category);
+
+        PrimaryDrawerItem[] primaryDrawerItems;
+
+        int videoCategoryId = 0;
+        int videoIdFull = 0;
+        int lengthBest  = 0;
+        int length2016  = 0;
+        int lengthNew   = 0;
+
+        for (int i = 0; i < videoCategory.length; i++) {
+
+            switch (i) {
+
+                case 2 :
+                    channelNames = getResources().getStringArray(R.array.channel_names);
+                    channelId = getResources().getStringArray(R.array.channel_id);
+                    videoTypes = getResources().getStringArray(R.array.video_types);
+                    primaryDrawerItems = new PrimaryDrawerItem[channelId.length];
+                    lengthBest = channelNames.length;
+                    videoCategoryId = 2;
+                    break;
+
+                case 1 :
+                    channelNames = getResources().getStringArray(R.array.channel_names_2016);
+                    channelId = getResources().getStringArray(R.array.channel_id_2016);
+                    videoTypes = getResources().getStringArray(R.array.video_types_2016);
+                    primaryDrawerItems = new PrimaryDrawerItem[channelId.length];
+                    length2016 = channelNames.length;
+                    videoCategoryId = 1;
+                    break;
+
+                case 0 :
+                    channelNames = getResources().getStringArray(R.array.channel_names_new);
+                    channelId = getResources().getStringArray(R.array.channel_id_new);
+                    videoTypes = getResources().getStringArray(R.array.video_types_new);
+                    primaryDrawerItems = new PrimaryDrawerItem[channelId.length];
+                    lengthNew = channelNames.length;
+                    videoCategoryId = 0;
+                    break;
+
+                default:
+                    primaryDrawerItems = new PrimaryDrawerItem[i];
+            }
+
+            if (i != 0) videoIdFull += ADDITIONAL_ITEM_NUMBER;
+
+            for (int j = 0; j < channelId.length; j++) {
+
+               if (i !=0 ) videoIdFull++;
+
+                primaryDrawerItems[j] = new PrimaryDrawerItem()
+                        .withName(channelNames[j])
+                        .withIdentifier(videoIdFull)
+                        .withTag(videoCategoryId)
+                        .withIcon(R.drawable.ic_video)
+                        .withSelectable(false);
+
+                Log.d("DrawerDebug", "onCreate: " + channelNames[j] + " " + String.valueOf(videoIdFull));
+            }
+
+                    if ( i != 0 ) {
+                        drawerBuilder.addDrawerItems(
+                                new SectionDrawerItem().withName(videoCategory[i]).withTextColorRes(R.color.accent_color).withDivider(true))
+                                .addDrawerItems(new DividerDrawerItem());
+                    }
+
+            drawerBuilder.addDrawerItems(primaryDrawerItems);
+
+        }
+
+        final int finalLength201 = length2016;
+        final int finalLengthNew = lengthNew;
+        drawerBuilder.withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+            @Override
+            public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                selectedDrawerItem = position;
+
+                if (drawerItem != null) {
+                    if (drawerItem.getIdentifier() >= 0 && selectedDrawerItem != -1) {
+
+                        int videoCategory = (int) drawerItem.getTag();
+                        Log.d("DrawerDebug", "onItemClick: " + String.valueOf(position));
+
+                        switch (videoCategory) {
+
+                            case 2 :
+                                channelNames = getResources().getStringArray(R.array.channel_names);
+                                channelId = getResources().getStringArray(R.array.channel_id);
+                                videoTypes = getResources().getStringArray(R.array.video_types);
+                                selectedDrawerItem -= (finalLength201 + finalLengthNew + ADDITIONAL_ITEM_NUMBER * videoCategory);
+                                break;
+
+                            case 1 :
+                                channelNames = getResources().getStringArray(R.array.channel_names_2016);
+                                channelId = getResources().getStringArray(R.array.channel_id_2016);
+                                videoTypes = getResources().getStringArray(R.array.video_types_2016);
+                                selectedDrawerItem -= (finalLengthNew + ADDITIONAL_ITEM_NUMBER * videoCategory);
+                                break;
+
+                            case 0 :
+                                channelNames = getResources().getStringArray(R.array.channel_names_new);
+                                channelId = getResources().getStringArray(R.array.channel_id_new);
+                                videoTypes = getResources().getStringArray(R.array.video_types_new);
+                                break;
+                        }
+
+                        setToolbarAndSelectedDrawerItem(
+                                channelNames[selectedDrawerItem-1],
+                                (position - 1)
+                        );
+
+                        Bundle bundle = new Bundle();
+                        bundle.putString(Utils.TAG_VIDEO_TYPE,
+                                videoTypes[selectedDrawerItem-1]);
+                        bundle.putString(Utils.TAG_CHANNEL_ID,
+                                channelId[selectedDrawerItem-1]);
+
+                        fragment = new FragmentChannelVideo();
+                        fragment.setArguments(bundle);
+
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragment_container, fragment)
+                                .commit();
+
+                    } else if (selectedDrawerItem == -1) {
+                        Intent aboutIntent = new Intent(getApplicationContext(),
+                                ActivityAbout.class);
+                        startActivity(aboutIntent);
+                        overridePendingTransition(R.anim.open_next, R.anim.close_main);
+                    }
+                }
+                return false;
+            }
+        });
+
+        drawer = drawerBuilder.build();
 
         setToolbarAndSelectedDrawerItem(channelNames[0], 0);
 
@@ -172,7 +275,6 @@ public class ActivityHome extends AppCompatActivity implements YouTubePlayer.OnF
 
 
     }
-
 
     private void checkYouTubeApi() {
         YouTubeInitializationResult errorReason =

@@ -5,6 +5,7 @@ package com.bohdan.youtube.util;
  */
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.View;
 
 import com.bohdan.youtube.R;
@@ -64,6 +65,28 @@ public class Utils {
     public static final String TAG_CHANNEL_ID  = "channel_id";
     public static final String TAG_VIDEO_TYPE  = "video_type";
 
+    public static final String ARG_ADMOB_PREFERENCE = "admobPreference";
+    public static final String ARG_TRIGGER = "trigger";
+    public static final int ARG_TRIGGER_VALUE = 3;
+    public static final boolean IS_ADMOB_VISIBLE = true;
+    public static final boolean IS_ADMOB_IN_DEBUG = true;
+
+
+    public static void saveIntPreferences(Context ctx, String key, String param, int value) {
+        SharedPreferences sharedPreferences = ctx.getSharedPreferences(key, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(param, value);
+        editor.apply();
+    }
+
+    public static int loadIntPreferences(Context ctx, String key, String param) {
+        SharedPreferences sharedPreferences = ctx.getSharedPreferences(key, Context.MODE_PRIVATE);
+        if (key.equals(ARG_ADMOB_PREFERENCE)) {
+            return sharedPreferences.getInt(param, 1);
+        } else {
+            return sharedPreferences.getInt(param, 1000);
+        }
+    }
 
     // Method to check admob visibility
     public static boolean admobVisibility(AdView ad, boolean isInDebugMode){
